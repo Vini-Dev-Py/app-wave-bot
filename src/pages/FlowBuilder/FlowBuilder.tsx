@@ -1,27 +1,51 @@
-import ReactFlow, { addEdge, Background, Connection, ConnectionMode, Controls, Node, useEdgesState, useNodesState } from "reactflow";
+import ReactFlow, { addEdge, Background, Connection, ConnectionMode, Controls, EdgeMouseHandler, MarkerType, Node, useEdgesState, useNodesState } from "reactflow";
 import zinc from "tailwindcss/colors"
 import 'reactflow/dist/style.css';
-import { Square } from "../../components/nodes/Square";
+import { InitialFlowNode } from "../../components/nodes/InitialFlowNode/InitialFlowNode";
 import { useCallback } from "react";
+import { TextMessageNode } from "../../components/nodes/TextMessageNode/TextMessageNode";
 
-const NODE_TYPES = {
-    square: Square
+export interface NodeData {
+  label: string;
+  description?: string;
+  config?: {
+    text?: string;
+    question?: string;
+    responseVariable?: string;
+    timeout?: number;
+    mediaUrl?: string;
+  };
 }
 
-const INITIAL_NODES = [
-    {
-        id: crypto.randomUUID(),
-        type: "square",
-        data: { label: "Square 1" },
-        position: { x: 100, y: 100 },
-    },
-    {
-        id: crypto.randomUUID(),
-        type: "square",
-        data: { label: "Square 1" },
-        position: { x: 1000, y: 100 },
-    }
+const NODE_TYPES = {
+  initialFlowNode: InitialFlowNode,
+  textMessage: TextMessageNode
+}
+
+const INITIAL_NODES: Node[] = [
+  {
+    id: crypto.randomUUID(),
+    type: "initialFlowNode",
+    data: { label: "Square 1" },
+    position: { x: 100, y: 100 },
+  },
+  {
+    id: crypto.randomUUID(),
+    type: "textMessage",
+    data: { label: "textMessage 1" },
+    position: { x: 1000, y: 100 },
+  }
 ] satisfies Node[]
+
+const defaultEdgeOptions = {
+  animated: true,
+  style: { stroke: '#64748b', strokeWidth: 2 },
+  type: 'smoothstep',
+  markerEnd: {
+      type: MarkerType.ArrowClosed,
+      color: '#64748b',
+  },
+};
 
 export function FlowBuilder() {
     const [edges, setEdges, onEdgesChange] = useEdgesState([])
@@ -31,24 +55,31 @@ export function FlowBuilder() {
         return setEdges((edges) => addEdge(connection, edges))
     }, [setEdges])
 
-    return (
-        <div className="w-full h-full">
-            <ReactFlow
-                nodeTypes={NODE_TYPES}
-                nodes={nodes}
-                edges={edges}
-                onEdgesChange={onEdgesChange}
-                onConnect={onConnect}
-                onNodesChange={onNodesChange}
-                connectionMode={ConnectionMode.Strict}
-            >
-                <Background 
-                    gap={12}
-                    size={2}
-                    color={zinc[200]}
-                />
-                <Controls />
-            </ReactFlow>
-        </div>
-    );
+    const onEdgeContextMenu: EdgeMouseHandler = useCallback((event, edge) => {
+        event.preventDefault();
+        setEdges((eds) => eds.filter((e) => e.id !== edge.id));
+    }, [setEdges]);
+
+  return (
+    <div className="w-full h-full">
+      <ReactFlow
+        nodeTypes={NODE_TYPES}
+        nodes={nodes}
+        edges={edges}
+        onEdgesChange={onEdgesChange}
+        onEdgeContextMenu={onEdgeContextMenu}
+        defaultEdgeOptions={defaultEdgeOptions}
+        onNodesChange={onNodesChange}
+        onConnect={onConnect}
+        connectionMode={ConnectionMode.Strict}
+    >
+        <Background 
+          gap={12}
+          size={2}
+          color={zinc[200]}
+        />
+        <Controls />
+      </ReactFlow>
+    </div>
+  );
 }

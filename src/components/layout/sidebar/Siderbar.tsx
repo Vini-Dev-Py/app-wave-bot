@@ -1,5 +1,5 @@
 import { Button } from "primereact/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
 import { motion } from "framer-motion";
@@ -9,8 +9,21 @@ export function Sidebar() {
 
   const navigate = useNavigate();
   
+  useEffect(() => {
+    const savedState = localStorage.getItem("wavebot-sidebar-open");
+    if (savedState !== null) {
+      setOpenSidebar(savedState === "true");
+    }
+  }, []);
+
+  const toggleSidebar = () => {
+    const newState = !openSidebar;
+    setOpenSidebar(newState);
+    localStorage.setItem("wavebot-sidebar-open", newState.toString());
+  };
+
   const handleLogout = () => {
-    localStorage.removeItem("app-essential-user");
+    localStorage.removeItem("app-wavebot-user");
     localStorage.removeItem("token");
     navigate("/login");
   };
@@ -44,22 +57,22 @@ export function Sidebar() {
                   <Button
                     icon={openSidebar ? "pi pi-angle-left text-xl" : "pi pi-bars text-xl"}
                     className="p-button-rounded p-button-text p-button-plain text-black"
-                    onClick={() => setOpenSidebar(!openSidebar)}
+                    onClick={toggleSidebar}
                   />
                 </div>
                 <div className="bg-top bg-cover space-y-1">
-                  <ul className="flex flex-col list-none p-0 m-0">
+                  <ul className="flex items-start w-full flex-col list-none p-0 m-0">
                     {Itens.map((item, index) => (
                       <motion.li
                         key={index}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className={twMerge("flex items-center py-2.5 rounded-lg hover:bg-gray-200 px-4")}
+                        className={twMerge("flex items-center p-2.5 rounded-lg hover:bg-gray-200 w-full")}
                       >
-                        <Link to={item.to} className="font-medium text-sm text-gray-900 flex items-center transition-all group cursor-pointer">
-                          <span><i className={twMerge(item.icon, "text-xl")} /></span>
+                        <Link to={item.to} className="font-medium text-sm text-gray-900 flex items-center justify-center transition-all group cursor-pointer w-full">
+                          <i className={twMerge(item.icon, "text-xl")} />
                           {openSidebar && (
-                            <motion.span transition={{ duration: 0.2 }} className={twMerge(openSidebar ? "ml-4" : "")}>{item.text}</motion.span>
+                            <motion.span transition={{ duration: 0.2 }} className="ml-4">{item.text}</motion.span>
                           )}
                         </Link>
                       </motion.li>
@@ -73,12 +86,12 @@ export function Sidebar() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className={twMerge("flex items-center py-2.5 rounded-lg hover:bg-gray-200 px-4")}
-                    onClick={() => handleLogout()}
+                    onClick={handleLogout}
                   >
                     <div className="font-medium text-sm text-gray-900 flex items-center transition-all duration-200 group cursor-pointer">
-                      <span className={twMerge(openSidebar ? "mr-4" : "")}> <i className="text-xl pi pi-sign-out" /> </span>
+                      <i className="text-xl pi pi-sign-out" />
                       {openSidebar && (
-                        <motion.span transition={{ duration: 0.2 }}>Logout</motion.span>
+                        <motion.span transition={{ duration: 0.2 }} className="ml-4">Logout</motion.span>
                       )}
                     </div>
                   </motion.li>
